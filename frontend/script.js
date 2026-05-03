@@ -235,9 +235,9 @@ if (isDashPage) {
         }
 
         try {
-            // Fetch directly from CoinCap in the browser to avoid Render server IP blocks
-            const res = await fetch('https://api.coincap.io/v2/assets?ids=bitcoin,ethereum,solana,dogecoin,xrp');
-            const json = await res.json();
+            // Try CoinCap first
+            let res = await fetch('https://api.coincap.io/v2/assets?ids=bitcoin,ethereum,solana,dogecoin,xrp').catch(() => null);
+            let json = res ? await res.json() : null;
             
             if (json && json.data) {
                 const newPrices = {};
@@ -250,8 +250,30 @@ if (isDashPage) {
                         volume24h: parseFloat(coin.volumeUsd24Hr)
                     };
                 });
-                
                 pricesData = newPrices;
+            } else {
+                // Fallback to Binance for at least prices if CoinCap fails
+                const binanceUrl = 'https://api.binance.com/api/v3/ticker/24hr?symbols=%5B%22BTCUSDT%22,%22ETHUSDT%22,%22SOLUSDT%22,%22DOGEUSDT%22,%22XRPUSDT%22%5D';
+                const bRes = await fetch(binanceUrl).catch(() => null);
+                const bJson = bRes ? await bRes.json() : null;
+                
+                if (bJson && Array.isArray(bJson)) {
+                    const mapping = { BTCUSDT: 'bitcoin', ETHUSDT: 'ethereum', SOLUSDT: 'solana', DOGEUSDT: 'dogecoin', XRPUSDT: 'ripple' };
+                    bJson.forEach(item => {
+                        const key = mapping[item.symbol];
+                        if (key) {
+                            pricesData[key] = {
+                                price: parseFloat(item.lastPrice),
+                                change24h: parseFloat(item.priceChangePercent),
+                                marketCap: pricesData[key]?.marketCap || 0,
+                                volume24h: parseFloat(item.quoteVolume)
+                            };
+                        }
+                    });
+                }
+            }
+
+            if (Object.keys(pricesData).length > 0) {
                 const coins = ['bitcoin', 'ethereum', 'solana', 'dogecoin', 'ripple'];
                 
                 coins.forEach(c => {
@@ -273,8 +295,8 @@ if (isDashPage) {
                     // Meta
                     const mcapEl = document.getElementById(`mcap-${c}`);
                     const volEl = document.getElementById(`vol-${c}`);
-                    if (mcapEl) mcapEl.textContent = `$${formatCompact(data.marketCap)}`;
-                    if (volEl) volEl.textContent = `$${formatCompact(data.volume24h)}`;
+                    if (mcapEl) mcapEl.textContent = data.marketCap > 0 ? `$${formatCompact(data.marketCap)}` : '—';
+                    if (volEl) volEl.textContent = data.volume24h > 0 ? `$${formatCompact(data.volume24h)}` : '—';
                 });
 
                 document.getElementById('last-updated').textContent = `Last updated: ${new Date().toLocaleTimeString()}`;
@@ -283,7 +305,7 @@ if (isDashPage) {
                 if (manual) showToast('Prices updated');
             }
         } catch (err) {
-            console.error(err);
+            console.error('Fetch error:', err);
             if (manual) showToast('Failed to update prices', 'error');
         } finally {
             if (manual) {
