@@ -28,7 +28,8 @@ const getBotReply = async (message) => {
     const formatPrice = (p) => p > 0 ? `$${p.toLocaleString()}` : "fetching...";
 
     // ── Search Integration (Tavily first, then DDG) ──
-    const isSearchQuery = msg.includes('news') || msg.includes('latest') || msg.includes('happened') || msg.includes('search') || msg.length > 15;
+    const searchIntents = ['news', 'latest', 'happened', 'search', 'data', 'history', 'month', 'week', 'year', 'update', 'event', 'why'];
+    const isSearchQuery = searchIntents.some(k => msg.includes(k)) || msg.length > 20;
 
     if (isSearchQuery) {
         // Try Tavily if Key exists
@@ -36,10 +37,10 @@ const getBotReply = async (message) => {
         if (tavilyKey) {
             try {
                 const tv = tavily({ apiKey: tavilyKey });
-                const searchResult = await tv.search(msg, { searchDepth: "basic", maxResults: 3 });
+                const searchResult = await tv.search(msg, { searchDepth: "advanced", maxResults: 3 });
                 if (searchResult && searchResult.results.length > 0) {
-                    let reply = "🔍 **Tavily Live Insight:**\n\n";
-                    searchResult.results.forEach(res => { reply += `• ${res.content.substring(0, 200)}...\n`; });
+                    let reply = "🔍 **Live Market Analysis:**\n\n";
+                    searchResult.results.forEach(res => { reply += `• ${res.content.substring(0, 300)}...\n\n`; });
                     return reply;
                 }
             } catch (e) { console.error("Tavily Error:", e); }
@@ -48,7 +49,7 @@ const getBotReply = async (message) => {
         // Fallback to DDG Scraper
         const ddgInfo = await searchDDG(msg);
         if (ddgInfo) {
-            return `🌐 **Web Search Results:**\n\n${ddgInfo}\n\n*Live data via CryptoAI Scraper.*`;
+            return `🌐 **Web Search Insight:**\n\n${ddgInfo}\n\n*Analyzed via CryptoAI Real-time Engine.*`;
         }
     }
 
