@@ -1,9 +1,30 @@
 const express = require('express');
 const router  = express.Router();
+const axios = require('axios');
+const cheerio = require('cheerio');
 const protect = require('../middleware/auth');
 const priceStore = require('../priceStore');
 
-const { tavily } = require("@tavily/core");
+// ─── Free Search Engine (DuckDuckGo Lite Scraper) ─────────────────────────────
+const searchWeb = async (query) => {
+    try {
+        const searchUrl = `https://duckduckgo.com/lite/?q=${encodeURIComponent(query + ' cryptocurrency news')}`;
+        const { data } = await axios.get(searchUrl, {
+            headers: { 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36' }
+        });
+        const $ = cheerio.load(data);
+        let results = [];
+        $('.result-link').each((i, el) => {
+            if (i < 3) results.push($(el).text().trim());
+        });
+        $('.result-snippet').each((i, el) => {
+            if (i < 3) results[i] = results[i] + ": " + $(el).text().trim();
+        });
+        return results.join('\n\n');
+    } catch (e) {
+        return null;
+    }
+};
 
 // ─── Smart Crypto AI Response Engine ──────────────────────────────────────────
 const getBotReply = async (message) => {
@@ -11,26 +32,13 @@ const getBotReply = async (message) => {
     const prices = priceStore.getPrices();
     const formatPrice = (p) => p > 0 ? `$${p.toLocaleString()}` : "fetching...";
 
-    // ── Tavily Search Integration ──
-    const tavilyKey = process.env.TAVILY_API_KEY;
-    if (tavilyKey && msg.length > 5) {
-        try {
-            const tv = tavily({ apiKey: tavilyKey });
-            const searchContext = "Search only for cryptocurrency and blockchain info: " + msg;
-            const searchResult = await tv.search(searchContext, {
-                searchDepth: "basic",
-                maxResults: 3
-            });
+    // ── Check if user is asking for News or Search ──
+    const isSearchQuery = msg.includes('news') || msg.includes('latest') || msg.includes('happened') || msg.includes('search') || msg.includes('what is the update');
 
-            if (searchResult && searchResult.results.length > 0) {
-                let reply = "🔍 **Latest Insight:**\n\n";
-                searchResult.results.forEach(res => {
-                    reply += `• ${res.content.substring(0, 200)}...\n`;
-                });
-                return reply + "\n\n⚠️ Always verify info from multiple sources.";
-            }
-        } catch (e) {
-            console.error("Tavily Error:", e);
+    if (isSearchQuery && msg.length > 5) {
+        const liveInfo = await searchWeb(msg);
+        if (liveInfo) {
+            return `🔍 **Live Search Results:**\n\n${liveInfo}\n\n*Source: Real-time web results via CryptoAI Engine.*`;
         }
     }
 
@@ -48,7 +56,7 @@ const getBotReply = async (message) => {
 
     // ── Casual Responses (ChatGPT Style) ──
     if (msg === 'hi' || msg === 'hello' || msg === 'hey') {
-        return "Hello (v2)! How can I help you with crypto today?";
+        return "Hello! How can I help you with crypto today?";
     }
     if (msg.includes('how are you')) {
         return "I'm doing well, thank you! Ready to answer your crypto questions.";
@@ -68,7 +76,7 @@ const getBotReply = async (message) => {
     // Bitcoin General
     if (msg.includes('bitcoin') || msg.includes('btc')) {
         const p = prices.bitcoin;
-        return `₿ **Bitcoin (BTC)** is the first cryptocurrency, created by Satoshi Nakamoto. \n\n• **Price:** ${formatPrice(p.price)}\n• **Supply:** 21 Million max\n• **Type:** Digital Gold / Store of Value`;
+        return `₿ **Bitcoin (BTC)** is the first cryptocurrency, created by Satoshi Nakamoto. \n\n• **Price:** ${formatPrice(p.price)}\n• **Type:** Digital Gold / Store of Value`;
     }
 
     // Ethereum
