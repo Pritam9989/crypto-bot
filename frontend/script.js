@@ -1,7 +1,7 @@
 // ============================================================================
 // CONFIG & UTILS
 // ============================================================================
-const API = 'http://localhost:5000/api';
+const API = window.location.hostname === 'localhost' ? 'http://localhost:5000/api' : '/api';
 
 const getToken = () => localStorage.getItem('cryptoToken');
 const getUser  = () => JSON.parse(localStorage.getItem('cryptoUser') || '{}');
