@@ -3,11 +3,36 @@ const router  = express.Router();
 const protect = require('../middleware/auth');
 const priceStore = require('../priceStore');
 
+const { tavily } = require("@tavily/core");
+
 // ─── Smart Crypto AI Response Engine ──────────────────────────────────────────
-const getBotReply = (message) => {
+const getBotReply = async (message) => {
     const msg = message.toLowerCase().trim();
     const prices = priceStore.getPrices();
     const formatPrice = (p) => p > 0 ? `$${p.toLocaleString()}` : "fetching...";
+
+    // ── Tavily Search Integration ──
+    const tavilyKey = process.env.TAVILY_API_KEY;
+    if (tavilyKey && msg.length > 5) {
+        try {
+            const tv = tavily({ apiKey: tavilyKey });
+            const searchContext = "Search only for cryptocurrency and blockchain info: " + msg;
+            const searchResult = await tv.search(searchContext, {
+                searchDepth: "basic",
+                maxResults: 3
+            });
+
+            if (searchResult && searchResult.results.length > 0) {
+                let reply = "🔍 **Latest Insight:**\n\n";
+                searchResult.results.forEach(res => {
+                    reply += `• ${res.content.substring(0, 200)}...\n`;
+                });
+                return reply + "\n\n⚠️ Always verify info from multiple sources.";
+            }
+        } catch (e) {
+            console.error("Tavily Error:", e);
+        }
+    }
 
     // ── Check if topic is Crypto-Related ──
     const cryptoKeywords = [
@@ -77,7 +102,7 @@ const getBotReply = (message) => {
 };
 
 // ─── POST /api/chat (Protected) ───────────────────────────────────────────────
-router.post('/', protect, (req, res) => {
+router.post('/', protect, async (req, res) => {
     try {
         const { message } = req.body;
 
@@ -85,7 +110,7 @@ router.post('/', protect, (req, res) => {
             return res.status(400).json({ success: false, message: 'Message cannot be empty.' });
         }
 
-        const reply = getBotReply(message);
+        const reply = await getBotReply(message);
         res.json({ success: true, reply });
 
     } catch (err) {
