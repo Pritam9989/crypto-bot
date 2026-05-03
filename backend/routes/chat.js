@@ -7,137 +7,77 @@ const priceStore = require('../priceStore');
 const getBotReply = (message) => {
     const msg = message.toLowerCase().trim();
     const prices = priceStore.getPrices();
-
     const formatPrice = (p) => p > 0 ? `$${p.toLocaleString()}` : "fetching...";
 
-    // ── Greetings ────────────────────────────────────────────────────────────
+    // ── Check if topic is Crypto-Related ──
+    const cryptoKeywords = [
+        'crypto', 'bitcoin', 'btc', 'eth', 'sol', 'doge', 'xrp', 'price', 'market', 'chart', 'wallet', 'token', 
+        'blockchain', 'mining', 'staking', 'defi', 'nft', 'gas', 'fee', 'bull', 'bear', 'crash', 'invest', 'buy', 
+        'sell', 'holding', 'portfolio', 'halving', 'altcoin', 'stablecoin', 'usdt', 'usdc', 'binance', 'coinbase',
+        'ledger', 'seed', 'keys', 'satoshi', 'smart contract', 'dapp', 'web3', 'mint', 'airdrop', 'scam', 'risk',
+        'trading', 'pump', 'dump', 'whale', 'fud', 'fomo', 'hodl', 'moon', 'diamond hands', 'paper hands', 'bagholder'
+    ];
+    
+    const isCrypto = cryptoKeywords.some(k => msg.includes(k)) || 
+                     /how|what|why|when|is|who/.test(msg) && (msg.includes('coin') || msg.includes('chain') || msg.includes('market'));
+
+    // ── Conversational Small Talk (Only if it's about the bot itself) ──
     if (/^(hi|hello|hey|yo|sup|hii|helo|greetings)/.test(msg)) {
-        const tips = [
-            "💡 Tip: Never invest more than you can afford to lose.",
-            "💡 Tip: Bitcoin has never recovered to its ATH within 1 week — patience is key.",
-            "💡 Tip: DCA (Dollar Cost Averaging) is a great strategy for volatile markets.",
-            "💡 Tip: Always store your crypto in a cold wallet for large amounts.",
-            "💡 Tip: Research the team and use-case before investing in any altcoin.",
-        ];
-        const tip = tips[Math.floor(Math.random() * tips.length)];
-        return `👋 Hello! I'm your Crypto AI Assistant.\nI can help you understand crypto, market trends, and news.\n\n${tip}\n\nTry asking me about Bitcoin, Ethereum, Solana, or DeFi!`;
+        return "👋 Hey there! I'm your Crypto AI. I'm feeling bullish today! 🚀\n\nI can talk about anything in the crypto world—from Bitcoin prices to how Blockchain works. What's on your mind?";
+    }
+    if (msg.includes('how are you') || msg.includes('how r u')) {
+        return "😊 I'm doing great! Just watching the charts and waiting for the next big move. How about you? Ready to talk crypto?";
+    }
+    if (msg.includes('who are you') || msg.includes('what are you')) {
+        return "🤖 I'm your specialized Crypto AI Assistant. My job is to help you navigate the wild world of Web3 and digital currencies. I'm basically a ChatGPT that went to crypto school! 🎓";
     }
 
-    // ── Risk / Crash Alerts ────────────────────────────────────────────────────
-    if (msg.includes('crash') || msg.includes('falling') || msg.includes('dropping') ||
-        (msg.includes('down') && (msg.includes('market') || msg.includes('price') || msg.includes('crypto')))) {
-        return "⚠️ Market Alert: Prices are dropping due to heavy selling pressure.\n📉 Why: Could be macro news, whale sell-offs, or regulatory fears.\n🔴 Risk Level: HIGH\n\nIf you're invested: stay calm, don't panic sell.\nHistorically, markets recover over time.\n\n⚠️ This is not financial advice.";
+    // ── Refuse Non-Crypto Topics ──
+    if (!isCrypto && msg.length > 5) {
+        return "🙏 I'd love to chat, but I'm specialized **only in Cryptocurrency and Blockchain**. \n\nPlease ask me anything about Bitcoin, Market Trends, or how to stay safe in Crypto! ₿🚀";
     }
 
-    // ── Buy / Sell / Investment ────────────────────────────────────────────────
-    if (msg.includes('should i buy') || msg.includes('should i sell') || msg.includes('should i invest') ||
-        (msg.includes('buy') && (msg.includes('bitcoin') || msg.includes('btc') || msg.includes('eth') || msg.includes('crypto'))) ||
-        msg.includes('good time to buy') || msg.includes('good time to sell')) {
-        return "📊 Investment Outlook:\n📈 Long-term (1+ year): Historically, BTC & ETH have trended upward.\n📉 Short-term: High volatility, unpredictable swings.\n🟡 Risk Level: Medium to High\n\nStrategy tip: Consider DCA (buy small amounts regularly) rather than lump-sum investing.\n\n⚠️ This is not financial advice. Always do your own research (DYOR).";
-    }
-
-    // ── Portfolio Questions ────────────────────────────────────────────────────
-    if (msg.includes('portfolio') || msg.includes('how much') || msg.includes('profit') || msg.includes('loss') || msg.includes('gains')) {
-        return "📂 Portfolio Tips:\n• Use the Portfolio Calculator on the dashboard to track your holdings.\n• Diversify — don't put all eggs in one basket.\n• Set a stop-loss at 10–15% below entry to limit losses.\n• Review your portfolio weekly, not daily — daily checks cause stress.\n\n⚠️ This is not financial advice.";
-    }
-
-    // ── Market Trends / Price ─────────────────────────────────────────────────
-    if (msg.includes('price') || msg.includes('trend') || msg.includes('market') || msg.includes('how is') || msg.includes('bull') || msg.includes('bear')) {
-        return "📈 Market Overview:\nCrypto markets are highly dynamic and move 24/7.\n\n🟢 Bull Market: Prices rising, high investor optimism.\n🔴 Bear Market: Prices falling, widespread pessimism.\n\nCheck the Live Markets panel above for real-time prices and 24h changes.\n🟡 Risk Level: Medium\n\n⚠️ This is not financial advice.";
-    }
-
-    // ── Crypto News ────────────────────────────────────────────────────────────
-    if (msg.includes('news') || msg.includes('happened') || msg.includes('latest') || msg.includes('update') || msg.includes('today')) {
-        return "📰 Market News Snapshot:\n1. What: Crypto markets are showing mixed signals.\n2. Why: Global economic uncertainty + institutional trading activity.\n3. Impact: Short-term volatility expected — prices may swing both ways.\n\n💡 Stay updated with reliable sources like CoinDesk, CoinTelegraph, and Bloomberg Crypto.\n⚠️ This is not financial advice.";
-    }
-
-    // ── Bitcoin ────────────────────────────────────────────────────────────────
+    // ── Deep Crypto Knowledge Base ──
+    
+    // Bitcoin
     if (msg.includes('bitcoin') || msg.includes('btc')) {
         const p = prices.bitcoin;
-        return `₿ Bitcoin (BTC):\n• **Live Price: ${formatPrice(p.price)}** (${p.change24h >= 0 ? '+' : ''}${p.change24h.toFixed(2)}%)\n• Created in 2009 by Satoshi Nakamoto.\n• Fixed supply of 21 million coins.\n• Known as 'Digital Gold'.\n\n⚠️ This is not financial advice.`;
+        return `₿ **Bitcoin (BTC)** is the king! Currently trading at **${formatPrice(p.price)}**. \n\nIt was created by Satoshi Nakamoto to be "Digital Gold." It has a limited supply of 21 million, which makes it scarce. Think of it as a global, permissionless bank in your pocket. 🏦✨`;
     }
 
-    // ── Ethereum ──────────────────────────────────────────────────────────────
+    // Ethereum
     if (msg.includes('ethereum') || msg.includes('eth')) {
         const p = prices.ethereum;
-        return `🔷 Ethereum (ETH):\n• **Live Price: ${formatPrice(p.price)}** (${p.change24h >= 0 ? '+' : ''}${p.change24h.toFixed(2)}%)\n• Programmable blockchain for dApps and Smart Contracts.\n• ETH fuels the network as 'gas'.\n• Switched to Proof-of-Stake in 2022.\n\n⚠️ Not financial advice.`;
+        return `🔷 **Ethereum (ETH)** is more than just money—it's a world computer. It's currently at **${formatPrice(p.price)}**. \n\nIt powers "Smart Contracts," which are like digital laws that run automatically. If Bitcoin is gold, Ethereum is the internet's electricity! ⚡🌍`;
     }
 
-    // ── Solana ────────────────────────────────────────────────────────────────
-    if (msg.includes('solana') || msg.includes('sol')) {
-        const p = prices.solana;
-        return `⚡ Solana (SOL):\n• **Live Price: ${formatPrice(p.price)}** (${p.change24h >= 0 ? '+' : ''}${p.change24h.toFixed(2)}%)\n• Ultra-fast blockchain (65k TPS).\n• Extremely low transaction fees.\n• A major competitor to Ethereum.\n\n⚠️ Not financial advice.`;
+    // Market State
+    if (msg.includes('market') || msg.includes('price') || msg.includes('trend') || msg.includes('crash')) {
+        return "📈 **Market Insight:** Crypto markets never sleep! We're seeing some high volatility right now. \n\nIf you're worried about a crash, remember: 'Time in the market beats timing the market.' Stay calm, keep your seed phrases safe, and always look at the long-term charts! 📊📉";
     }
 
-    // ── Dogecoin ──────────────────────────────────────────────────────────────
-    if (msg.includes('dogecoin') || msg.includes('doge')) {
-        const p = prices.dogecoin;
-        return `🐶 Dogecoin (DOGE):\n• **Live Price: ${formatPrice(p.price)}** (${p.change24h >= 0 ? '+' : ''}${p.change24h.toFixed(2)}%)\n• Started as a meme, now a top-tier coin.\n• Influenced by social media and Elon Musk.\n• Unlimited supply (inflationary).\n\n⚠️ Not financial advice.`;
+    // Investment Advice (Casual)
+    if (msg.includes('should i buy') || msg.includes('should i invest') || msg.includes('good time')) {
+        return "🤔 **Great question!** While I can't give financial advice, many experts suggest 'DCA' (Dollar Cost Averaging). Instead of buying all at once, buy a little bit every week. \n\nIt reduces stress and helps you build a position over time. Are you looking to buy Bitcoin or an altcoin? 💰🔍";
     }
 
-    // ── XRP / Ripple ──────────────────────────────────────────────────────────
-    if (msg.includes('xrp') || msg.includes('ripple')) {
-        const p = prices.ripple;
-        return `💎 XRP (Ripple):\n• **Live Price: ${formatPrice(p.price)}** (${p.change24h >= 0 ? '+' : ''}${p.change24h.toFixed(2)}%)\n• Built for fast cross-border bank payments.\n• Settlement in seconds, near-zero fees.\n• Focused on enterprise adoption.\n\n⚠️ Not financial advice.`;
+    // Wallets & Security
+    if (msg.includes('wallet') || msg.includes('safe') || msg.includes('security') || msg.includes('keys')) {
+        return "🛡️ **Security is #1!** Always use a Hardware Wallet (like Ledger or Trezor) for large amounts. \n\n**NEVER** share your 12-word seed phrase with anyone—not even me! If someone asks for it, it's a scam. 'Not your keys, not your coins!' 🔐🚫";
     }
 
-    // ── Blockchain ────────────────────────────────────────────────────────────
-    if (msg.includes('blockchain')) {
-        return "🔗 Blockchain Explained:\nImagine a shared Google Sheet that thousands of computers hold simultaneously.\n• Every transaction is recorded as a 'block' and chained to previous ones.\n• Once written, data CANNOT be altered — permanent and transparent.\n• No central authority controls it — it's decentralised.\n\n💡 It's the technology that makes crypto trustworthy and secure.";
+    // DeFi / NFTs
+    if (msg.includes('defi') || msg.includes('nft') || msg.includes('staking')) {
+        return "🚀 **Web3 is huge!** \n\n• **DeFi:** Banking without banks (Lending, Borrowing).\n• **Staking:** Earning 'interest' on your crypto (like a savings account).\n• **NFTs:** Digital ownership of art and items.\n\nWhich one do you want to dive deeper into? 🌊💎";
     }
 
-    // ── Cryptocurrency General ──────────────────────────────────────────────────
-    if (msg.includes('crypto') || msg.includes('cryptocurrency') || msg.includes('cruncy')) {
-        return "💰 Cryptocurrency Explained:\nCryptocurrency is a digital or virtual currency secured by cryptography.\n• It doesn't rely on banks to verify transactions.\n• It is decentralized, meaning no single government or entity controls it.\n• Bitcoin was the first cryptocurrency, created in 2009.\n• It uses 'Blockchain' technology to keep a public ledger of all transactions.\n\n💡 Try asking me: 'What is Bitcoin?' or 'What is Blockchain?'";
+    // General Crypto
+    if (isCrypto) {
+        return "🌟 **That's a fascinating part of crypto!** \n\nThe crypto space is evolving every single day. Whether it's institutional adoption or new technology like Layer 2s, there's always something to learn. \n\nDo you want me to explain the technical side or the investment side? 🧠💸";
     }
 
-    // ── Wallet ────────────────────────────────────────────────────────────────
-    if (msg.includes('wallet')) {
-        return "👛 Crypto Wallets:\n• Hot Wallet (online): MetaMask, Trust Wallet — easy to use, less secure.\n• Cold Wallet (offline): Ledger, Trezor — hardware device, most secure for large amounts.\n• Exchange Wallet: Coinbase, Binance — convenient but NOT fully yours.\n\n🔒 Golden Rule: 'Not your keys, not your coins!'\nAlways back up your seed phrase — NEVER share it with anyone.";
-    }
-
-    // ── DeFi ──────────────────────────────────────────────────────────────────
-    if (msg.includes('defi') || msg.includes('decentralized finance') || msg.includes('decentralised finance')) {
-        return "🏦 DeFi (Decentralized Finance):\nBanking without banks — financial services run on blockchain code.\n• Lending & Borrowing: Earn interest or borrow crypto (Aave, Compound).\n• DEX (Decentralized Exchange): Trade without a middleman (Uniswap).\n• Yield Farming: Earn rewards by providing liquidity.\n\n🔴 Risk: Very HIGH — smart contract bugs, rug pulls, high volatility.\n⚠️ This is not financial advice.";
-    }
-
-    // ── NFT ───────────────────────────────────────────────────────────────────
-    if (msg.includes('nft') || msg.includes('non-fungible')) {
-        return "🎨 NFTs (Non-Fungible Tokens):\nUnique digital assets stored on a blockchain — like digital collectibles.\n• Each NFT is one-of-a-kind and provably scarce.\n• Used for: art, music, gaming items, virtual real estate.\n• Peak in 2021–2022, market has cooled significantly since.\n\n🔴 Risk: Very HIGH — most NFTs lost 90%+ of value after the hype cycle.\nOnly buy what you genuinely appreciate, not for speculation.";
-    }
-
-    // ── Staking ───────────────────────────────────────────────────────────────
-    if (msg.includes('staking') || msg.includes('stake')) {
-        return "🥩 Staking Explained:\nEarn passive income by locking up crypto to help validate transactions.\n• Like earning interest in a savings account — but for crypto.\n• ETH staking: ~3–5% APY. SOL staking: ~6–8% APY.\n• Risk: Your coins are locked for a period. If price drops, your rewards may not cover the loss.\n\n💡 Best for long-term holders who believe in the coin anyway.";
-    }
-
-    // ── Mining ────────────────────────────────────────────────────────────────
-    if (msg.includes('mining') || msg.includes('mine crypto')) {
-        return "⛏️ Crypto Mining:\nThe process of validating transactions using computing power (Proof of Work).\n• Bitcoin mining: Requires massive energy + expensive ASICs.\n• Miners earn BTC as reward for solving complex math puzzles.\n• Ethereum stopped mining in 2022 — switched to Proof of Stake.\n\n💡 Home mining Bitcoin is not profitable in 2024 unless you have very cheap electricity.\n⚠️ This is not financial advice.";
-    }
-
-    // ── Gas Fees ──────────────────────────────────────────────────────────────
-    if (msg.includes('gas') || msg.includes('gas fee') || msg.includes('transaction fee')) {
-        return "⛽ Gas Fees:\nThe cost to execute a transaction on a blockchain.\n• Ethereum gas can spike to $50–$100 during high demand.\n• Solana & Polygon have gas fees under $0.01.\n• Gas fees go to validators, not the network's developers.\n\n💡 Tip: Use off-peak hours (weekends, late nights UTC) to save on Ethereum gas fees.";
-    }
-
-    // ── USDT / Stablecoins ────────────────────────────────────────────────────
-    if (msg.includes('usdt') || msg.includes('usdc') || msg.includes('stablecoin') || msg.includes('stable')) {
-        return "💵 Stablecoins (USDT, USDC):\nCryptocurrencies pegged 1:1 to a fiat currency like USD.\n• USDT (Tether): Largest stablecoin by market cap.\n• USDC (Circle): More transparent and regulated.\n• Use case: Park money safely during market crashes, earn yield, pay on-chain.\n\n⚠️ Risk: Even stablecoins can 'de-peg' — USDC briefly lost its peg in 2023.\n⚠️ This is not financial advice.";
-    }
-
-    // ── Altcoin ───────────────────────────────────────────────────────────────
-    if (msg.includes('altcoin') || msg.includes('alt coin') || msg.includes('alts')) {
-        return "🪙 Altcoins:\nAny cryptocurrency that is NOT Bitcoin is called an altcoin.\n• Large caps: ETH, SOL, XRP, BNB — more stable, higher liquidity.\n• Mid/Small caps: Higher risk, higher potential reward.\n• Meme coins: DOGE, SHIB — driven by hype, very risky.\n\n💡 Rule of thumb: Higher risk = higher potential return, but also higher chance of 0.\n⚠️ This is not financial advice.";
-    }
-
-    // ── What can you do / help ─────────────────────────────────────────────────
-    if (msg.includes('what can you') || msg.includes('help me') || msg.includes('what do you know') || msg.includes('topics')) {
-        return "🤖 I can help you with:\n\n• 📈 Market trends (bull, bear, crash)\n• 💰 Coins: Bitcoin, Ethereum, Solana, Dogecoin, XRP\n• 🏦 DeFi, NFTs, Staking, Mining, Gas Fees\n• 📰 Crypto news summaries\n• 👛 Wallets & Security\n• 💵 Stablecoins (USDT, USDC)\n• 📂 Portfolio tips\n\nJust ask me anything about crypto! 🚀";
-    }
-
-    // ── Default Fallback ───────────────────────────────────────────────────────
-    return "🤖 I'm your Crypto AI Assistant. I didn't quite catch that!\n\nYou can ask me about:\n• Bitcoin, Ethereum, Solana, Dogecoin, XRP\n• DeFi, NFTs, Staking, Mining, Gas Fees\n• Wallets, Stablecoins, Market Trends\n• Portfolio tips and crypto news\n\nTry: 'What is blockchain?' or 'Should I buy Bitcoin?' 💬";
+    // Default Fallback (Casual)
+    return "🤖 I'm here to help! I'm a specialized Crypto AI. \n\nYou can ask me 'anything' about Bitcoin, how to buy crypto, or what a blockchain is. \n\nWhat's your biggest question about the crypto market right now? 💬🚀";
 };
 
 // ─── POST /api/chat (Protected) ───────────────────────────────────────────────
