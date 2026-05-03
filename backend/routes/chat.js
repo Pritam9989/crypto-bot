@@ -28,8 +28,8 @@ const getBotReply = async (message) => {
     const formatPrice = (p) => p > 0 ? `$${p.toLocaleString()}` : "fetching...";
 
     // ── Search Integration (Tavily first, then DDG) ──
-    const searchIntents = ['news', 'latest', 'happened', 'search', 'data', 'history', 'month', 'week', 'year', 'update', 'event', 'why'];
-    const isSearchQuery = searchIntents.some(k => msg.includes(k)) || msg.length > 20;
+    const searchIntents = ['news', 'latest', 'happened', 'search', 'data', 'history', 'month', 'week', 'year', 'update', 'event', 'why', 'tell me about'];
+    const isSearchQuery = searchIntents.some(k => msg.includes(k)) || msg.split(' ').length > 4;
 
     if (isSearchQuery) {
         // Try Tavily if Key exists
@@ -51,6 +51,9 @@ const getBotReply = async (message) => {
         if (ddgInfo) {
             return `🌐 **Web Search Insight:**\n\n${ddgInfo}\n\n*Analyzed via CryptoAI Real-time Engine.*`;
         }
+
+        // If search failed but it was definitely a search query
+        return "I am trying to fetch the latest web data for you, but the connection is slow. Please try asking again in a few seconds, or try a simpler query like 'Bitcoin price'. ⏳";
     }
 
     // ── Check if topic is Crypto-Related ──
