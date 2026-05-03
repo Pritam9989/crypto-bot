@@ -62,6 +62,12 @@ const getBotReply = async (message) => {
     if (msg.includes('how are you')) return "I'm doing well, thank you! Ready to dive into the crypto markets.";
 
     // ── Direct Crypto Responses ──
+    if (msg.includes('what is crypto') || msg.includes('what is cryptocurrency')) {
+        return "Cryptocurrency is a digital or virtual currency that uses cryptography for security. Unlike traditional currencies, it's decentralized and typically operates on a blockchain. 🌐";
+    }
+    if (msg.includes('what is blockchain')) {
+        return "A blockchain is a decentralized, distributed ledger that records transactions across many computers. It's the technology that makes cryptocurrencies like Bitcoin possible! ⛓️";
+    }
     if (msg.includes('price') && !msg.includes('bitcoin') && !msg.includes('eth') && !msg.includes('sol')) {
         return `📊 **Live Market Prices:**\n• BTC: ${formatPrice(prices.bitcoin.price)}\n• ETH: ${formatPrice(prices.ethereum.price)}\n• SOL: ${formatPrice(prices.solana.price)}\n• XRP: ${formatPrice(prices.ripple.price)}\n• DOGE: ${formatPrice(prices.dogecoin.price)}`;
     }
