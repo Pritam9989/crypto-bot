@@ -189,6 +189,58 @@ if (isDashPage) {
     const REFRESH_INTERVAL = 60;
     let countdown = REFRESH_INTERVAL;
     let refreshTimer;
+    let isVoiceEnabled = localStorage.getItem('cryptoVoice') === 'true';
+
+    // Voice Setup
+    const voiceBtn = document.getElementById('btn-voice');
+    const voiceIcon = document.getElementById('voice-icon');
+    
+    function updateVoiceUI() {
+        if (isVoiceEnabled) {
+            voiceBtn.classList.add('active');
+            voiceBtn.querySelector('span').textContent = 'Voice: On';
+            voiceIcon.className = 'fa-solid fa-volume-high';
+        } else {
+            voiceBtn.classList.remove('active');
+            voiceBtn.querySelector('span').textContent = 'Voice: Off';
+            voiceIcon.className = 'fa-solid fa-volume-xmark';
+        }
+    }
+    updateVoiceUI();
+
+    voiceBtn.addEventListener('click', () => {
+        isVoiceEnabled = !isVoiceEnabled;
+        localStorage.setItem('cryptoVoice', isVoiceEnabled);
+        updateVoiceUI();
+        showToast(isVoiceEnabled ? 'Voice updates enabled' : 'Voice updates disabled');
+        if (isVoiceEnabled) speak("Voice updates enabled. I will read price changes for you.");
+    });
+
+    function speak(text) {
+        if (!window.speechSynthesis) return;
+        window.speechSynthesis.cancel(); // Stop current speech
+        const msg = new SpeechSynthesisUtterance(text);
+        msg.rate = 1.0;
+        msg.pitch = 1.0;
+        window.speechSynthesis.speak(msg);
+    }
+
+    function speakUpdate(coins) {
+        if (!isVoiceEnabled) return;
+        
+        let report = "";
+        const topCoins = ['bitcoin', 'ethereum', 'solana']; // Read top 3 to keep it concise
+        
+        topCoins.forEach(id => {
+            const coin = coins[id];
+            if (!coin) return;
+            const change = coin.change24h;
+            const action = change >= 0 ? "up" : "down";
+            report += `${coin.name} is ${action} ${Math.abs(change).toFixed(1)} percent. `;
+        });
+
+        if (report) speak(report);
+    }
 
     function formatMoney(num) {
         return new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(num);
@@ -270,6 +322,7 @@ if (isDashPage) {
                 document.getElementById('last-updated').textContent = `Last updated: ${new Date().toLocaleTimeString()}`;
                 updateSentiment(pricesData);
                 calculatePortfolio();
+                speakUpdate(pricesData);
                 if (manual) showToast('Prices updated');
             }
         } catch (err) {

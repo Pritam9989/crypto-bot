@@ -138,6 +138,8 @@ a:hover { color: var(--primary-hover); }
 
 .quick-btn { background: var(--primary-light); color: var(--primary); border: 1px solid rgba(99,102,241,0.3); padding: 10px 20px; border-radius: var(--radius-sm); font-size: 0.9rem; font-weight: 600; cursor: pointer; display: flex; align-items: center; gap: 8px; transition: all 0.2s; }
 .quick-btn:hover { background: rgba(99,102,241,0.2); }
+.quick-btn.active { background: var(--success); color: white; border-color: var(--success); }
+.quick-btn.active:hover { background: #059669; }
 
 /* Sentiment Card */
 .sentiment-card { background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius); padding: 20px 24px; margin-bottom: 32px; display: flex; align-items: center; justify-content: space-between; gap: 32px; box-shadow: 0 4px 20px rgba(0,0,0,0.2); flex-wrap: wrap; }
