@@ -2,28 +2,23 @@ const express = require('express');
 const router  = express.Router();
 const axios = require('axios');
 const cheerio = require('cheerio');
+const { tavily } = require("@tavily/core");
 const protect = require('../middleware/auth');
 const priceStore = require('../priceStore');
 
-// ─── Free Search Engine (DuckDuckGo Lite Scraper) ─────────────────────────────
-const searchWeb = async (query) => {
+// ─── Free Search Fallback (DuckDuckGo Lite Scraper) ───────────────────────────
+const searchDDG = async (query) => {
     try {
-        const searchUrl = `https://duckduckgo.com/lite/?q=${encodeURIComponent(query + ' cryptocurrency news')}`;
+        const searchUrl = `https://duckduckgo.com/lite/?q=${encodeURIComponent(query + ' cryptocurrency')}`;
         const { data } = await axios.get(searchUrl, {
             headers: { 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36' }
         });
         const $ = cheerio.load(data);
         let results = [];
-        $('.result-link').each((i, el) => {
-            if (i < 3) results.push($(el).text().trim());
-        });
-        $('.result-snippet').each((i, el) => {
-            if (i < 3) results[i] = results[i] + ": " + $(el).text().trim();
-        });
-        return results.join('\n\n');
-    } catch (e) {
-        return null;
-    }
+        $('.result-link').each((i, el) => { if (i < 2) results.push($(el).text().trim()); });
+        $('.result-snippet').each((i, el) => { if (i < 2) results[i] = results[i] + ": " + $(el).text().trim(); });
+        return results.length > 0 ? results.join('\n\n') : null;
+    } catch (e) { return null; }
 };
 
 // ─── Smart Crypto AI Response Engine ──────────────────────────────────────────
@@ -32,98 +27,71 @@ const getBotReply = async (message) => {
     const prices = priceStore.getPrices();
     const formatPrice = (p) => p > 0 ? `$${p.toLocaleString()}` : "fetching...";
 
-    // ── Check if user is asking for News or Search ──
-    const isSearchQuery = msg.includes('news') || msg.includes('latest') || msg.includes('happened') || msg.includes('search') || msg.includes('what is the update');
+    // ── Search Integration (Tavily first, then DDG) ──
+    const isSearchQuery = msg.includes('news') || msg.includes('latest') || msg.includes('happened') || msg.includes('search') || msg.length > 15;
 
-    if (isSearchQuery && msg.length > 5) {
-        const liveInfo = await searchWeb(msg);
-        if (liveInfo) {
-            return `🔍 **Live Search Results:**\n\n${liveInfo}\n\n*Source: Real-time web results via CryptoAI Engine.*`;
+    if (isSearchQuery) {
+        // Try Tavily if Key exists
+        const tavilyKey = process.env.TAVILY_API_KEY;
+        if (tavilyKey) {
+            try {
+                const tv = tavily({ apiKey: tavilyKey });
+                const searchResult = await tv.search(msg, { searchDepth: "basic", maxResults: 3 });
+                if (searchResult && searchResult.results.length > 0) {
+                    let reply = "🔍 **Tavily Live Insight:**\n\n";
+                    searchResult.results.forEach(res => { reply += `• ${res.content.substring(0, 200)}...\n`; });
+                    return reply;
+                }
+            } catch (e) { console.error("Tavily Error:", e); }
+        }
+
+        // Fallback to DDG Scraper
+        const ddgInfo = await searchDDG(msg);
+        if (ddgInfo) {
+            return `🌐 **Web Search Results:**\n\n${ddgInfo}\n\n*Live data via CryptoAI Scraper.*`;
         }
     }
 
     // ── Check if topic is Crypto-Related ──
-    const cryptoKeywords = [
-        'crypto', 'bitcoin', 'btc', 'eth', 'sol', 'doge', 'xrp', 'price', 'market', 'chart', 'wallet', 'token', 
-        'blockchain', 'mining', 'staking', 'defi', 'nft', 'gas', 'fee', 'bull', 'bear', 'crash', 'invest', 'buy', 
-        'sell', 'holding', 'portfolio', 'halving', 'altcoin', 'stablecoin', 'usdt', 'usdc', 'binance', 'coinbase',
-        'ledger', 'seed', 'keys', 'satoshi', 'smart contract', 'dapp', 'web3', 'mint', 'airdrop', 'scam', 'risk',
-        'trading', 'pump', 'dump', 'whale', 'fud', 'fomo', 'hodl', 'moon', 'diamond hands', 'paper hands', 'bagholder'
-    ];
-    
-    const isCrypto = cryptoKeywords.some(k => msg.includes(k)) || 
-                     /how|what|why|when|is|who/.test(msg) && (msg.includes('coin') || msg.includes('chain') || msg.includes('market'));
+    const cryptoKeywords = ['crypto', 'bitcoin', 'btc', 'eth', 'sol', 'doge', 'xrp', 'price', 'market', 'chart', 'wallet', 'token', 'blockchain', 'mining', 'staking', 'defi', 'nft', 'gas', 'binance', 'coinbase', 'satoshi', 'web3', 'mint', 'airdrop', 'scam', 'risk', 'trading', 'pump', 'dump', 'whale', 'fud', 'fomo', 'hodl', 'moon'];
+    const isCrypto = cryptoKeywords.some(k => msg.includes(k)) || /how|what|why|when|is|who/.test(msg) && (msg.includes('coin') || msg.includes('chain') || msg.includes('market'));
 
-    // ── Casual Responses (ChatGPT Style) ──
-    if (msg === 'hi' || msg === 'hello' || msg === 'hey') {
-        return "Hello! How can I help you with crypto today?";
-    }
-    if (msg.includes('how are you')) {
-        return "I'm doing well, thank you! Ready to answer your crypto questions.";
-    }
-    if (msg.includes('who are you')) {
-        return "I'm your Crypto AI Assistant. I can help you with market prices, blockchain info, and more.";
-    }
+    // ── Greetings & Self ──
+    if (msg === 'hi' || msg === 'hello' || msg === 'hey') return "Hello! I am CryptoAI Engine v3. How can I help you with crypto today?";
+    if (msg.includes('version')) return "I am running on **CryptoAI Engine v3** with real-time search capabilities. 🚀";
+    if (msg.includes('how are you')) return "I'm doing well, thank you! Ready to dive into the crypto markets.";
 
     // ── Direct Crypto Responses ──
-    
-    // Bitcoin Price specifically
-    if (msg === 'price of bitcoin' || msg === 'btc price' || msg === 'bitcoin price' || msg === 'current price of bitcoin') {
-        const p = prices.bitcoin;
-        return `The current price of **Bitcoin (BTC)** is **${formatPrice(p.price)}** (${p.change24h >= 0 ? '+' : ''}${p.change24h.toFixed(2)}% in 24h).`;
+    if (msg.includes('price') && !msg.includes('bitcoin') && !msg.includes('eth') && !msg.includes('sol')) {
+        return `📊 **Live Market Prices:**\n• BTC: ${formatPrice(prices.bitcoin.price)}\n• ETH: ${formatPrice(prices.ethereum.price)}\n• SOL: ${formatPrice(prices.solana.price)}\n• XRP: ${formatPrice(prices.ripple.price)}\n• DOGE: ${formatPrice(prices.dogecoin.price)}`;
     }
-
-    // Bitcoin General
     if (msg.includes('bitcoin') || msg.includes('btc')) {
         const p = prices.bitcoin;
-        return `₿ **Bitcoin (BTC)** is the first cryptocurrency, created by Satoshi Nakamoto. \n\n• **Price:** ${formatPrice(p.price)}\n• **Type:** Digital Gold / Store of Value`;
+        return `₿ **Bitcoin (BTC)** is at **${formatPrice(p.price)}**. It's the original digital gold created by Satoshi Nakamoto.`;
     }
-
-    // Ethereum
     if (msg.includes('ethereum') || msg.includes('eth')) {
         const p = prices.ethereum;
-        return `🔷 **Ethereum (ETH)** is a smart-contract platform.\n\n• **Price:** ${formatPrice(p.price)}\n• **24h Change:** ${p.change24h.toFixed(2)}%\n• **Use Case:** DeFi, NFTs, and dApps.`;
+        return `🔷 **Ethereum (ETH)** is currently **${formatPrice(p.price)}**. It powers smart contracts and the DeFi ecosystem.`;
     }
 
-    // Market / Crash
-    if (msg.includes('market') || msg.includes('trend') || msg.includes('crash')) {
-        return "📈 The crypto market is currently active. For real-time trends, check the 'Market Sentiment' bar at the top of your dashboard.";
+    // ── Non-Crypto Refusal ──
+    if (!isCrypto && msg.length > 5) {
+        return "I am a specialized Crypto AI. Please ask me anything about Bitcoin, Blockchain, or Market Trends! ₿🚀";
     }
 
-    // Investment Advice
-    if (msg.includes('should i buy') || msg.includes('invest')) {
-        return "Investing in crypto involves risk. A common strategy is DCA (Dollar Cost Averaging), but you should only invest what you are willing to lose. Which coin are you interested in?";
-    }
-
-    // Refuse Non-Crypto Topics 
-    if (!isCrypto && msg.length > 3) {
-        return "I apologize, but I am a specialized Crypto AI. I can only answer questions related to Cryptocurrency, Blockchain, and Finance. Please ask me something about Bitcoin or the market!";
-    }
-
-    // General Crypto
-    if (isCrypto) {
-        return "That's a great crypto question! To give you the best answer, could you be more specific? For example, are you asking about the price, the technology, or the news?";
-    }
-
-    // Default
-    return "I'm here to help with any crypto questions! Try asking: 'What is the price of Bitcoin?' or 'How does blockchain work?'";
+    return "I'm here to help with crypto! Ask me about prices, news, or how blockchain works. 💬";
 };
 
 // ─── POST /api/chat (Protected) ───────────────────────────────────────────────
 router.post('/', protect, async (req, res) => {
     try {
         const { message } = req.body;
-
-        if (!message || message.trim() === '') {
-            return res.status(400).json({ success: false, message: 'Message cannot be empty.' });
-        }
-
+        if (!message) return res.status(400).json({ success: false, message: 'Message cannot be empty.' });
         const reply = await getBotReply(message);
         res.json({ success: true, reply });
-
     } catch (err) {
-        console.error('Chat error:', err.message);
-        res.status(500).json({ success: false, message: 'Something went wrong. Please try again.' });
+        console.error('Chat error:', err);
+        res.status(500).json({ success: false, error: 'AI Error' });
     }
 });
 
