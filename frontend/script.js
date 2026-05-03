@@ -241,7 +241,7 @@ if (isDashPage) {
         }
 
         try {
-            // Try CoinCap first
+            // Try CoinCap
             let res = await fetch('https://api.coincap.io/v2/assets?ids=bitcoin,ethereum,solana,dogecoin,xrp').catch(() => null);
             let json = res ? await res.json() : null;
             
@@ -258,9 +258,8 @@ if (isDashPage) {
                 });
                 pricesData = newPrices;
             } else {
-                // Fallback to Binance for at least prices if CoinCap fails
-                const binanceUrl = 'https://api.binance.com/api/v3/ticker/24hr?symbols=%5B%22BTCUSDT%22,%22ETHUSDT%22,%22SOLUSDT%22,%22DOGEUSDT%22,%22XRPUSDT%22%5D';
-                const bRes = await fetch(binanceUrl).catch(() => null);
+                // Try Binance
+                const bRes = await fetch('https://api.binance.com/api/v3/ticker/24hr?symbols=%5B%22BTCUSDT%22,%22ETHUSDT%22,%22SOLUSDT%22,%22DOGEUSDT%22,%22XRPUSDT%22%5D').catch(() => null);
                 const bJson = bRes ? await bRes.json() : null;
                 
                 if (bJson && Array.isArray(bJson)) {
@@ -276,6 +275,20 @@ if (isDashPage) {
                             };
                         }
                     });
+                } else {
+                    // Try CoinGecko (Slow but reliable)
+                    const gRes = await fetch('https://api.coingecko.com/api/v3/simple/price?ids=bitcoin,ethereum,solana,dogecoin,ripple&vs_currencies=usd&include_24hr_change=true&include_market_cap=true&include_24hr_vol=true').catch(() => null);
+                    const gJson = gRes ? await gRes.json() : null;
+                    if (gJson) {
+                        for (const id in gJson) {
+                            pricesData[id] = {
+                                price: gJson[id].usd,
+                                change24h: gJson[id].usd_24h_change,
+                                marketCap: gJson[id].usd_market_cap,
+                                volume24h: gJson[id].usd_24h_vol
+                            };
+                        }
+                    }
                 }
             }
 

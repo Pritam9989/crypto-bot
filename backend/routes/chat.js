@@ -23,7 +23,7 @@ const getBotReply = (message) => {
 
     // ── Casual Responses (ChatGPT Style) ──
     if (msg === 'hi' || msg === 'hello' || msg === 'hey') {
-        return "Hello! How can I help you with crypto today?";
+        return "Hello (v2)! How can I help you with crypto today?";
     }
     if (msg.includes('how are you')) {
         return "I'm doing well, thank you! Ready to answer your crypto questions.";
