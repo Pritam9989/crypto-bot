@@ -21,63 +21,59 @@ const getBotReply = (message) => {
     const isCrypto = cryptoKeywords.some(k => msg.includes(k)) || 
                      /how|what|why|when|is|who/.test(msg) && (msg.includes('coin') || msg.includes('chain') || msg.includes('market'));
 
-    // ── Conversational Small Talk (Only if it's about the bot itself) ──
-    if (/^(hi|hello|hey|yo|sup|hii|helo|greetings)/.test(msg)) {
-        return "👋 Hey there! I'm your Crypto AI. I'm feeling bullish today! 🚀\n\nI can talk about anything in the crypto world—from Bitcoin prices to how Blockchain works. What's on your mind?";
+    // ── Casual Responses (ChatGPT Style) ──
+    if (msg === 'hi' || msg === 'hello' || msg === 'hey') {
+        return "Hello! How can I help you with crypto today?";
     }
-    if (msg.includes('how are you') || msg.includes('how r u')) {
-        return "😊 I'm doing great! Just watching the charts and waiting for the next big move. How about you? Ready to talk crypto?";
+    if (msg.includes('how are you')) {
+        return "I'm doing well, thank you! Ready to answer your crypto questions.";
     }
-    if (msg.includes('who are you') || msg.includes('what are you')) {
-        return "🤖 I'm your specialized Crypto AI Assistant. My job is to help you navigate the wild world of Web3 and digital currencies. I'm basically a ChatGPT that went to crypto school! 🎓";
-    }
-
-    // ── Refuse Non-Crypto Topics ──
-    if (!isCrypto && msg.length > 5) {
-        return "🙏 I'd love to chat, but I'm specialized **only in Cryptocurrency and Blockchain**. \n\nPlease ask me anything about Bitcoin, Market Trends, or how to stay safe in Crypto! ₿🚀";
+    if (msg.includes('who are you')) {
+        return "I'm your Crypto AI Assistant. I can help you with market prices, blockchain info, and more.";
     }
 
-    // ── Deep Crypto Knowledge Base ──
+    // ── Direct Crypto Responses ──
     
-    // Bitcoin
+    // Bitcoin Price specifically
+    if (msg === 'price of bitcoin' || msg === 'btc price' || msg === 'bitcoin price' || msg === 'current price of bitcoin') {
+        const p = prices.bitcoin;
+        return `The current price of **Bitcoin (BTC)** is **${formatPrice(p.price)}** (${p.change24h >= 0 ? '+' : ''}${p.change24h.toFixed(2)}% in 24h).`;
+    }
+
+    // Bitcoin General
     if (msg.includes('bitcoin') || msg.includes('btc')) {
         const p = prices.bitcoin;
-        return `₿ **Bitcoin (BTC)** is the king! Currently trading at **${formatPrice(p.price)}**. \n\nIt was created by Satoshi Nakamoto to be "Digital Gold." It has a limited supply of 21 million, which makes it scarce. Think of it as a global, permissionless bank in your pocket. 🏦✨`;
+        return `₿ **Bitcoin (BTC)** is the first cryptocurrency, created by Satoshi Nakamoto. \n\n• **Price:** ${formatPrice(p.price)}\n• **Supply:** 21 Million max\n• **Type:** Digital Gold / Store of Value`;
     }
 
     // Ethereum
     if (msg.includes('ethereum') || msg.includes('eth')) {
         const p = prices.ethereum;
-        return `🔷 **Ethereum (ETH)** is more than just money—it's a world computer. It's currently at **${formatPrice(p.price)}**. \n\nIt powers "Smart Contracts," which are like digital laws that run automatically. If Bitcoin is gold, Ethereum is the internet's electricity! ⚡🌍`;
+        return `🔷 **Ethereum (ETH)** is a smart-contract platform.\n\n• **Price:** ${formatPrice(p.price)}\n• **24h Change:** ${p.change24h.toFixed(2)}%\n• **Use Case:** DeFi, NFTs, and dApps.`;
     }
 
-    // Market State
-    if (msg.includes('market') || msg.includes('price') || msg.includes('trend') || msg.includes('crash')) {
-        return "📈 **Market Insight:** Crypto markets never sleep! We're seeing some high volatility right now. \n\nIf you're worried about a crash, remember: 'Time in the market beats timing the market.' Stay calm, keep your seed phrases safe, and always look at the long-term charts! 📊📉";
+    // Market / Crash
+    if (msg.includes('market') || msg.includes('trend') || msg.includes('crash')) {
+        return "📈 The crypto market is currently active. For real-time trends, check the 'Market Sentiment' bar at the top of your dashboard.";
     }
 
-    // Investment Advice (Casual)
-    if (msg.includes('should i buy') || msg.includes('should i invest') || msg.includes('good time')) {
-        return "🤔 **Great question!** While I can't give financial advice, many experts suggest 'DCA' (Dollar Cost Averaging). Instead of buying all at once, buy a little bit every week. \n\nIt reduces stress and helps you build a position over time. Are you looking to buy Bitcoin or an altcoin? 💰🔍";
+    // Investment Advice
+    if (msg.includes('should i buy') || msg.includes('invest')) {
+        return "Investing in crypto involves risk. A common strategy is DCA (Dollar Cost Averaging), but you should only invest what you are willing to lose. Which coin are you interested in?";
     }
 
-    // Wallets & Security
-    if (msg.includes('wallet') || msg.includes('safe') || msg.includes('security') || msg.includes('keys')) {
-        return "🛡️ **Security is #1!** Always use a Hardware Wallet (like Ledger or Trezor) for large amounts. \n\n**NEVER** share your 12-word seed phrase with anyone—not even me! If someone asks for it, it's a scam. 'Not your keys, not your coins!' 🔐🚫";
-    }
-
-    // DeFi / NFTs
-    if (msg.includes('defi') || msg.includes('nft') || msg.includes('staking')) {
-        return "🚀 **Web3 is huge!** \n\n• **DeFi:** Banking without banks (Lending, Borrowing).\n• **Staking:** Earning 'interest' on your crypto (like a savings account).\n• **NFTs:** Digital ownership of art and items.\n\nWhich one do you want to dive deeper into? 🌊💎";
+    // Refuse Non-Crypto Topics 
+    if (!isCrypto && msg.length > 3) {
+        return "I apologize, but I am a specialized Crypto AI. I can only answer questions related to Cryptocurrency, Blockchain, and Finance. Please ask me something about Bitcoin or the market!";
     }
 
     // General Crypto
     if (isCrypto) {
-        return "🌟 **That's a fascinating part of crypto!** \n\nThe crypto space is evolving every single day. Whether it's institutional adoption or new technology like Layer 2s, there's always something to learn. \n\nDo you want me to explain the technical side or the investment side? 🧠💸";
+        return "That's a great crypto question! To give you the best answer, could you be more specific? For example, are you asking about the price, the technology, or the news?";
     }
 
-    // Default Fallback (Casual)
-    return "🤖 I'm here to help! I'm a specialized Crypto AI. \n\nYou can ask me 'anything' about Bitcoin, how to buy crypto, or what a blockchain is. \n\nWhat's your biggest question about the crypto market right now? 💬🚀";
+    // Default
+    return "I'm here to help with any crypto questions! Try asking: 'What is the price of Bitcoin?' or 'How does blockchain work?'";
 };
 
 // ─── POST /api/chat (Protected) ───────────────────────────────────────────────

@@ -308,6 +308,14 @@ if (isDashPage) {
                 document.getElementById('last-updated').textContent = `Last updated: ${new Date().toLocaleTimeString()}`;
                 updateSentiment(pricesData);
                 calculatePortfolio();
+                
+                // Sync prices with backend so AI Chatbot can see them
+                fetch(`${API}/crypto/sync`, {
+                    method: 'POST',
+                    headers: authHeaders(),
+                    body: JSON.stringify({ prices: pricesData })
+                }).catch(e => console.error('Sync failed', e));
+
                 if (manual) showToast('Prices updated');
             }
         } catch (err) {

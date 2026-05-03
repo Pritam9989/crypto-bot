@@ -114,3 +114,14 @@ router.get('/price', protect, async (req, res) => {
 });
 
 module.exports = router;
+
+// --- Sync prices from Frontend (Ensures AI has live data) ---
+router.post(" /sync\, protect, (req, res) => {
+ const { prices } = req.body;
+ if (prices) {
+ priceStore.setPrices(prices);
+ return res.json({ success: true });
+ }
+ res.status(400).json({ success: false });
+});
+
