@@ -77,6 +77,11 @@ const getBotReply = (message) => {
         return "🔗 Blockchain Explained:\nImagine a shared Google Sheet that thousands of computers hold simultaneously.\n• Every transaction is recorded as a 'block' and chained to previous ones.\n• Once written, data CANNOT be altered — permanent and transparent.\n• No central authority controls it — it's decentralised.\n\n💡 It's the technology that makes crypto trustworthy and secure.";
     }
 
+    // ── Cryptocurrency General ──────────────────────────────────────────────────
+    if (msg.includes('crypto') || msg.includes('cryptocurrency') || msg.includes('cruncy')) {
+        return "💰 Cryptocurrency Explained:\nCryptocurrency is a digital or virtual currency secured by cryptography.\n• It doesn't rely on banks to verify transactions.\n• It is decentralized, meaning no single government or entity controls it.\n• Bitcoin was the first cryptocurrency, created in 2009.\n• It uses 'Blockchain' technology to keep a public ledger of all transactions.\n\n💡 Try asking me: 'What is Bitcoin?' or 'What is Blockchain?'";
+    }
+
     // ── Wallet ────────────────────────────────────────────────────────────────
     if (msg.includes('wallet')) {
         return "👛 Crypto Wallets:\n• Hot Wallet (online): MetaMask, Trust Wallet — easy to use, less secure.\n• Cold Wallet (offline): Ledger, Trezor — hardware device, most secure for large amounts.\n• Exchange Wallet: Coinbase, Binance — convenient but NOT fully yours.\n\n🔒 Golden Rule: 'Not your keys, not your coins!'\nAlways back up your seed phrase — NEVER share it with anyone.";
