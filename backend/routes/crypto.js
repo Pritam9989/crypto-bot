@@ -1,6 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const protect = require('../middleware/auth');
+const priceStore = require('../priceStore');
 
 // ─── Cache to avoid rate limits ─────────────────────────────
 let priceCache = null;
@@ -59,6 +60,7 @@ router.get('/prices', protect, async (req, res) => {
         };
 
         lastFetch = now;
+        priceStore.setPrices(priceCache);
         res.json({ success: true, data: priceCache });
 
     } catch (err) {

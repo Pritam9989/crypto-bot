@@ -1,10 +1,14 @@
 const express = require('express');
 const router  = express.Router();
 const protect = require('../middleware/auth');
+const priceStore = require('../priceStore');
 
 // ─── Smart Crypto AI Response Engine ──────────────────────────────────────────
 const getBotReply = (message) => {
     const msg = message.toLowerCase().trim();
+    const prices = priceStore.getPrices();
+
+    const formatPrice = (p) => p > 0 ? `$${p.toLocaleString()}` : "fetching...";
 
     // ── Greetings ────────────────────────────────────────────────────────────
     if (/^(hi|hello|hey|yo|sup|hii|helo|greetings)/.test(msg)) {
@@ -49,27 +53,32 @@ const getBotReply = (message) => {
 
     // ── Bitcoin ────────────────────────────────────────────────────────────────
     if (msg.includes('bitcoin') || msg.includes('btc')) {
-        return "₿ Bitcoin (BTC):\n• Created in 2009 by the anonymous Satoshi Nakamoto.\n• Fixed supply of 21 million coins — true digital scarcity.\n• Called 'Digital Gold' — a store of value like gold bars.\n• Halving events (every ~4 years) cut new supply, historically boosting price.\n\n🔴 Risk: Highly volatile. Prices can drop 30–50% in weeks.\n⚠️ This is not financial advice.";
+        const p = prices.bitcoin;
+        return `₿ Bitcoin (BTC):\n• **Live Price: ${formatPrice(p.price)}** (${p.change24h >= 0 ? '+' : ''}${p.change24h.toFixed(2)}%)\n• Created in 2009 by Satoshi Nakamoto.\n• Fixed supply of 21 million coins.\n• Known as 'Digital Gold'.\n\n⚠️ This is not financial advice.`;
     }
 
     // ── Ethereum ──────────────────────────────────────────────────────────────
     if (msg.includes('ethereum') || msg.includes('eth')) {
-        return "🔷 Ethereum (ETH):\n• More than currency — it's a programmable blockchain platform.\n• Powers smart contracts and 1000s of decentralised apps (dApps).\n• ETH is the 'gas' that fuels all operations on the Ethereum network.\n• Transitioned to Proof-of-Stake (PoS) in 2022 — 99.9% more energy efficient.\n\n🟡 Risk: Volatile but strong fundamentals.\n⚠️ This is not financial advice.";
+        const p = prices.ethereum;
+        return `🔷 Ethereum (ETH):\n• **Live Price: ${formatPrice(p.price)}** (${p.change24h >= 0 ? '+' : ''}${p.change24h.toFixed(2)}%)\n• Programmable blockchain for dApps and Smart Contracts.\n• ETH fuels the network as 'gas'.\n• Switched to Proof-of-Stake in 2022.\n\n⚠️ Not financial advice.`;
     }
 
     // ── Solana ────────────────────────────────────────────────────────────────
     if (msg.includes('solana') || msg.includes('sol')) {
-        return "⚡ Solana (SOL):\n• One of the fastest blockchains — 65,000 transactions per second.\n• Very low fees (< $0.01 per tx) — great for NFTs and DeFi.\n• A strong competitor to Ethereum.\n• Known for occasional network outages in the past.\n\n🔴 Risk: Higher volatility than BTC/ETH. Strong tech but still maturing.\n⚠️ This is not financial advice.";
+        const p = prices.solana;
+        return `⚡ Solana (SOL):\n• **Live Price: ${formatPrice(p.price)}** (${p.change24h >= 0 ? '+' : ''}${p.change24h.toFixed(2)}%)\n• Ultra-fast blockchain (65k TPS).\n• Extremely low transaction fees.\n• A major competitor to Ethereum.\n\n⚠️ Not financial advice.`;
     }
 
     // ── Dogecoin ──────────────────────────────────────────────────────────────
     if (msg.includes('dogecoin') || msg.includes('doge')) {
-        return "🐶 Dogecoin (DOGE):\n• Started as a meme in 2013 — became a top-10 coin!\n• Unlimited supply (no cap) — inflationary by design.\n• Heavily influenced by social media hype and Elon Musk tweets.\n• Used for tipping online and some payments.\n\n🔴 Risk: Very HIGH — primarily meme/sentiment driven.\n⚠️ This is not financial advice.";
+        const p = prices.dogecoin;
+        return `🐶 Dogecoin (DOGE):\n• **Live Price: ${formatPrice(p.price)}** (${p.change24h >= 0 ? '+' : ''}${p.change24h.toFixed(2)}%)\n• Started as a meme, now a top-tier coin.\n• Influenced by social media and Elon Musk.\n• Unlimited supply (inflationary).\n\n⚠️ Not financial advice.`;
     }
 
     // ── XRP / Ripple ──────────────────────────────────────────────────────────
     if (msg.includes('xrp') || msg.includes('ripple')) {
-        return "💎 XRP (Ripple):\n• Designed for ultra-fast international bank transfers.\n• Settlement in 3–5 seconds, fees less than 1 cent.\n• Ripple Labs controls a significant portion of XRP — centralization concern.\n• Faced major SEC lawsuit (2020–2023) — partially resolved, boosting price.\n\n🟡 Risk: Medium — dependent on regulatory outcomes.\n⚠️ This is not financial advice.";
+        const p = prices.ripple;
+        return `💎 XRP (Ripple):\n• **Live Price: ${formatPrice(p.price)}** (${p.change24h >= 0 ? '+' : ''}${p.change24h.toFixed(2)}%)\n• Built for fast cross-border bank payments.\n• Settlement in seconds, near-zero fees.\n• Focused on enterprise adoption.\n\n⚠️ Not financial advice.`;
     }
 
     // ── Blockchain ────────────────────────────────────────────────────────────

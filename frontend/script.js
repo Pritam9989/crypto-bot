@@ -185,7 +185,13 @@ if (isDashPage) {
     });
 
     // ── PRICES & PORTFOLIO ──
-    let pricesData = {};
+    let pricesData = {
+        bitcoin: { price: 65000, change24h: 0, marketCap: 0, volume24h: 0 },
+        ethereum: { price: 3500, change24h: 0, marketCap: 0, volume24h: 0 },
+        solana: { price: 150, change24h: 0, marketCap: 0, volume24h: 0 },
+        dogecoin: { price: 0.15, change24h: 0, marketCap: 0, volume24h: 0 },
+        ripple: { price: 0.60, change24h: 0, marketCap: 0, volume24h: 0 }
+    };
     const REFRESH_INTERVAL = 60;
     let countdown = REFRESH_INTERVAL;
     let refreshTimer;
