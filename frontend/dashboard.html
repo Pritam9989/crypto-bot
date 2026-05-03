@@ -1,0 +1,374 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CryptoAI — Dashboard</title>
+    <meta name="description" content="Your smart Crypto AI dashboard — Live prices, market insights, portfolio tracking, and AI-powered chat assistant.">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+    <link rel="stylesheet" href="style.css">
+</head>
+<body class="dashboard-page">
+
+    <!-- Background orbs -->
+    <div class="dash-bg">
+        <div class="orb orb-dash-1"></div>
+        <div class="orb orb-dash-2"></div>
+    </div>
+
+    <!-- ── Navbar ───────────────────────────────────────────────── -->
+    <nav class="navbar" role="navigation" aria-label="Main navigation">
+        <div class="nav-inner">
+            <div class="nav-brand">
+                <div class="brand-icon"><i class="fa-brands fa-bitcoin"></i></div>
+                <span>Crypto<strong>AI</strong></span>
+            </div>
+
+            <div class="nav-center" id="refresh-countdown-wrap">
+                <div class="refresh-indicator">
+                    <div class="refresh-ring" id="refresh-ring"></div>
+                    <span id="refresh-countdown">60s</span>
+                    <span class="refresh-label">auto-refresh</span>
+                </div>
+            </div>
+
+            <div class="nav-right">
+                <div class="nav-user-chip">
+                    <div class="user-avatar-sm" id="user-avatar-sm">U</div>
+                    <span id="nav-user-email">User</span>
+                </div>
+                <button id="logout-btn" class="btn-logout" aria-label="Logout">
+                    <i class="fa-solid fa-right-from-bracket"></i>
+                    <span>Logout</span>
+                </button>
+            </div>
+        </div>
+    </nav>
+
+    <!-- ── Main Content ──────────────────────────────────────────── -->
+    <main class="dashboard-main">
+
+        <!-- Page Header -->
+        <div class="page-header">
+            <div>
+                <h1 class="page-title">Live Markets</h1>
+                <p class="page-subtitle" id="last-updated">Fetching latest prices...</p>
+            </div>
+            <div class="header-actions">
+                <button class="quick-btn" id="btn-refresh" title="Refresh prices">
+                    <i class="fa-solid fa-rotate-right" id="refresh-icon"></i>
+                    Refresh
+                </button>
+            </div>
+        </div>
+
+        <!-- ── Market Sentiment Bar ──────────────────────────────── -->
+        <div class="sentiment-card" id="sentiment-card">
+            <div class="sentiment-left">
+                <div class="sentiment-icon" id="sentiment-icon">📊</div>
+                <div>
+                    <div class="sentiment-label">Market Sentiment</div>
+                    <div class="sentiment-value" id="sentiment-value">Calculating...</div>
+                </div>
+            </div>
+            <div class="sentiment-bar-wrap">
+                <div class="sentiment-bar-track">
+                    <div class="sentiment-bar-fill" id="sentiment-fill" style="width:50%"></div>
+                </div>
+                <div class="sentiment-extremes">
+                    <span>🔴 Fear</span>
+                    <span>🟢 Greed</span>
+                </div>
+            </div>
+            <div class="sentiment-note">Based on 24h price changes</div>
+        </div>
+
+        <!-- ── Coins Grid ────────────────────────────────────────── -->
+        <div class="coins-grid" id="coins-grid">
+            <!-- BTC -->
+            <div class="coin-card" id="card-bitcoin" data-coin="bitcoin">
+                <div class="coin-card-top">
+                    <div class="coin-icon btc-icon"><i class="fa-brands fa-bitcoin"></i></div>
+                    <div class="coin-info-top">
+                        <span class="coin-name">Bitcoin</span>
+                        <span class="coin-symbol-badge">BTC</span>
+                    </div>
+                    <div class="coin-rank">#1</div>
+                </div>
+                <div class="coin-price" id="price-bitcoin">
+                    <span class="skeleton-box" style="width:130px;height:36px;"></span>
+                </div>
+                <div class="coin-change" id="change-bitcoin">
+                    <span class="skeleton-box" style="width:70px;height:18px;"></span>
+                </div>
+                <div class="coin-meta-row">
+                    <div class="coin-meta-item">
+                        <span class="meta-label">Market Cap</span>
+                        <span class="meta-val" id="mcap-bitcoin">—</span>
+                    </div>
+                    <div class="coin-meta-item">
+                        <span class="meta-label">24h Vol</span>
+                        <span class="meta-val" id="vol-bitcoin">—</span>
+                    </div>
+                </div>
+                <div class="coin-card-sparkline" id="spark-bitcoin"></div>
+            </div>
+
+            <!-- ETH -->
+            <div class="coin-card" id="card-ethereum" data-coin="ethereum">
+                <div class="coin-card-top">
+                    <div class="coin-icon eth-icon"><i class="fa-brands fa-ethereum"></i></div>
+                    <div class="coin-info-top">
+                        <span class="coin-name">Ethereum</span>
+                        <span class="coin-symbol-badge">ETH</span>
+                    </div>
+                    <div class="coin-rank">#2</div>
+                </div>
+                <div class="coin-price" id="price-ethereum">
+                    <span class="skeleton-box" style="width:110px;height:36px;"></span>
+                </div>
+                <div class="coin-change" id="change-ethereum">
+                    <span class="skeleton-box" style="width:70px;height:18px;"></span>
+                </div>
+                <div class="coin-meta-row">
+                    <div class="coin-meta-item">
+                        <span class="meta-label">Market Cap</span>
+                        <span class="meta-val" id="mcap-ethereum">—</span>
+                    </div>
+                    <div class="coin-meta-item">
+                        <span class="meta-label">24h Vol</span>
+                        <span class="meta-val" id="vol-ethereum">—</span>
+                    </div>
+                </div>
+                <div class="coin-card-sparkline" id="spark-ethereum"></div>
+            </div>
+
+            <!-- SOL -->
+            <div class="coin-card" id="card-solana" data-coin="solana">
+                <div class="coin-card-top">
+                    <div class="coin-icon sol-icon"><i class="fa-solid fa-bolt"></i></div>
+                    <div class="coin-info-top">
+                        <span class="coin-name">Solana</span>
+                        <span class="coin-symbol-badge">SOL</span>
+                    </div>
+                    <div class="coin-rank">#5</div>
+                </div>
+                <div class="coin-price" id="price-solana">
+                    <span class="skeleton-box" style="width:90px;height:36px;"></span>
+                </div>
+                <div class="coin-change" id="change-solana">
+                    <span class="skeleton-box" style="width:70px;height:18px;"></span>
+                </div>
+                <div class="coin-meta-row">
+                    <div class="coin-meta-item">
+                        <span class="meta-label">Market Cap</span>
+                        <span class="meta-val" id="mcap-solana">—</span>
+                    </div>
+                    <div class="coin-meta-item">
+                        <span class="meta-label">24h Vol</span>
+                        <span class="meta-val" id="vol-solana">—</span>
+                    </div>
+                </div>
+                <div class="coin-card-sparkline" id="spark-solana"></div>
+            </div>
+
+            <!-- DOGE -->
+            <div class="coin-card" id="card-dogecoin" data-coin="dogecoin">
+                <div class="coin-card-top">
+                    <div class="coin-icon doge-icon"><i class="fa-solid fa-dog"></i></div>
+                    <div class="coin-info-top">
+                        <span class="coin-name">Dogecoin</span>
+                        <span class="coin-symbol-badge">DOGE</span>
+                    </div>
+                    <div class="coin-rank">#8</div>
+                </div>
+                <div class="coin-price" id="price-dogecoin">
+                    <span class="skeleton-box" style="width:80px;height:36px;"></span>
+                </div>
+                <div class="coin-change" id="change-dogecoin">
+                    <span class="skeleton-box" style="width:70px;height:18px;"></span>
+                </div>
+                <div class="coin-meta-row">
+                    <div class="coin-meta-item">
+                        <span class="meta-label">Market Cap</span>
+                        <span class="meta-val" id="mcap-dogecoin">—</span>
+                    </div>
+                    <div class="coin-meta-item">
+                        <span class="meta-label">24h Vol</span>
+                        <span class="meta-val" id="vol-dogecoin">—</span>
+                    </div>
+                </div>
+                <div class="coin-card-sparkline" id="spark-dogecoin"></div>
+            </div>
+
+            <!-- XRP -->
+            <div class="coin-card" id="card-ripple" data-coin="ripple">
+                <div class="coin-card-top">
+                    <div class="coin-icon xrp-icon"><i class="fa-solid fa-wave-square"></i></div>
+                    <div class="coin-info-top">
+                        <span class="coin-name">XRP</span>
+                        <span class="coin-symbol-badge">XRP</span>
+                    </div>
+                    <div class="coin-rank">#6</div>
+                </div>
+                <div class="coin-price" id="price-ripple">
+                    <span class="skeleton-box" style="width:80px;height:36px;"></span>
+                </div>
+                <div class="coin-change" id="change-ripple">
+                    <span class="skeleton-box" style="width:70px;height:18px;"></span>
+                </div>
+                <div class="coin-meta-row">
+                    <div class="coin-meta-item">
+                        <span class="meta-label">Market Cap</span>
+                        <span class="meta-val" id="mcap-ripple">—</span>
+                    </div>
+                    <div class="coin-meta-item">
+                        <span class="meta-label">24h Vol</span>
+                        <span class="meta-val" id="vol-ripple">—</span>
+                    </div>
+                </div>
+                <div class="coin-card-sparkline" id="spark-ripple"></div>
+            </div>
+        </div>
+
+        <!-- ── Bottom Grid: Portfolio + Chat ─────────────────────── -->
+        <div class="bottom-grid">
+
+            <!-- Portfolio Calculator -->
+            <div class="portfolio-panel">
+                <div class="panel-header">
+                    <div class="panel-title-row">
+                        <i class="fa-solid fa-chart-pie"></i>
+                        <h2>Portfolio Calculator</h2>
+                    </div>
+                    <p class="panel-subtitle">Enter your holdings to see live value</p>
+                </div>
+
+                <div class="portfolio-inputs">
+                    <div class="p-input-row" data-coin="bitcoin">
+                        <div class="p-coin-label">
+                            <div class="coin-icon-sm btc-icon"><i class="fa-brands fa-bitcoin"></i></div>
+                            <span>BTC</span>
+                        </div>
+                        <div class="p-input-wrap">
+                            <input type="number" class="p-input" id="p-bitcoin" placeholder="0.00" min="0" step="any">
+                        </div>
+                        <div class="p-value" id="pv-bitcoin">$0.00</div>
+                    </div>
+
+                    <div class="p-input-row" data-coin="ethereum">
+                        <div class="p-coin-label">
+                            <div class="coin-icon-sm eth-icon"><i class="fa-brands fa-ethereum"></i></div>
+                            <span>ETH</span>
+                        </div>
+                        <div class="p-input-wrap">
+                            <input type="number" class="p-input" id="p-ethereum" placeholder="0.00" min="0" step="any">
+                        </div>
+                        <div class="p-value" id="pv-ethereum">$0.00</div>
+                    </div>
+
+                    <div class="p-input-row" data-coin="solana">
+                        <div class="p-coin-label">
+                            <div class="coin-icon-sm sol-icon"><i class="fa-solid fa-bolt"></i></div>
+                            <span>SOL</span>
+                        </div>
+                        <div class="p-input-wrap">
+                            <input type="number" class="p-input" id="p-solana" placeholder="0.00" min="0" step="any">
+                        </div>
+                        <div class="p-value" id="pv-solana">$0.00</div>
+                    </div>
+
+                    <div class="p-input-row" data-coin="dogecoin">
+                        <div class="p-coin-label">
+                            <div class="coin-icon-sm doge-icon"><i class="fa-solid fa-dog"></i></div>
+                            <span>DOGE</span>
+                        </div>
+                        <div class="p-input-wrap">
+                            <input type="number" class="p-input" id="p-dogecoin" placeholder="0.00" min="0" step="any">
+                        </div>
+                        <div class="p-value" id="pv-dogecoin">$0.00</div>
+                    </div>
+
+                    <div class="p-input-row" data-coin="ripple">
+                        <div class="p-coin-label">
+                            <div class="coin-icon-sm xrp-icon"><i class="fa-solid fa-wave-square"></i></div>
+                            <span>XRP</span>
+                        </div>
+                        <div class="p-input-wrap">
+                            <input type="number" class="p-input" id="p-ripple" placeholder="0.00" min="0" step="any">
+                        </div>
+                        <div class="p-value" id="pv-ripple">$0.00</div>
+                    </div>
+                </div>
+
+                <div class="portfolio-total">
+                    <div class="total-label">Total Portfolio Value</div>
+                    <div class="total-value" id="portfolio-total">$0.00</div>
+                    <button class="clear-portfolio-btn" id="clear-portfolio" title="Clear all">
+                        <i class="fa-solid fa-xmark"></i> Clear
+                    </button>
+                </div>
+            </div>
+
+            <!-- Chat Panel -->
+            <div class="chat-panel">
+                <div class="chat-head">
+                    <div class="bot-identity">
+                        <div class="bot-avatar">
+                            <i class="fa-solid fa-robot"></i>
+                            <div class="bot-status-dot"></div>
+                        </div>
+                        <div>
+                            <h3 class="bot-name">Crypto AI Assistant</h3>
+                            <span class="online-badge">
+                                <span class="pulse"></span>
+                                Online · Ready to help
+                            </span>
+                        </div>
+                    </div>
+
+                    <div class="chat-chips" id="chat-chips">
+                        <button class="chip" onclick="sendQuick('What is Bitcoin?')">₿ Bitcoin</button>
+                        <button class="chip" onclick="sendQuick('What is the market trend?')">📈 Trends</button>
+                        <button class="chip" onclick="sendQuick('Latest crypto news?')">📰 News</button>
+                        <button class="chip" onclick="sendQuick('What is DeFi?')">🏦 DeFi</button>
+                        <button class="chip" onclick="sendQuick('What is staking?')">🥩 Staking</button>
+                        <button class="chip" onclick="sendQuick('What can you help me with?')">🤖 Help</button>
+                    </div>
+                </div>
+
+                <div class="chat-messages" id="chat-messages">
+                    <div class="msg bot-msg">
+                        <div class="msg-bubble">
+                            👋 Hello! I'm your <strong>Crypto AI Assistant</strong>.<br>
+                            I can explain crypto concepts, market trends, coins, DeFi, NFTs, and more.<br><br>
+                            Use the quick chips above, or just ask me anything! 🚀
+                        </div>
+                        <span class="msg-time" id="welcome-time"></span>
+                    </div>
+                </div>
+
+                <div class="chat-input-area">
+                    <form id="chat-form">
+                        <div class="chat-input-wrap">
+                            <input type="text" id="chat-input" placeholder="Ask me about crypto, e.g. 'What is Solana?'" autocomplete="off" maxlength="500">
+                            <button type="submit" class="send-btn" id="send-btn" aria-label="Send message">
+                                <i class="fa-solid fa-paper-plane"></i>
+                            </button>
+                        </div>
+                    </form>
+                    <p class="chat-disclaimer">⚠️ Educational use only. Not financial advice.</p>
+                </div>
+            </div>
+
+        </div><!-- /bottom-grid -->
+
+    </main>
+
+    <!-- Toast notification -->
+    <div class="toast" id="toast"></div>
+
+    <script src="script.js"></script>
+</body>
+</html>
